@@ -2,3 +2,8 @@
 
 
 .vscode/*
+
+layout-cli/Cargo.lock
+layout-cli/target/*
+
+layout-cli/output.pdf
