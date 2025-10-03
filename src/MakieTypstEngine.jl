@@ -1,5 +1,5 @@
 module MakieTypstEngine
 
-# Write your package code here.
+include("rustcall.jl")
 
 end
