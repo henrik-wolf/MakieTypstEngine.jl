@@ -7,3 +7,6 @@ layout-cli/Cargo.lock
 layout-cli/target/*
 
 layout-cli/output.pdf
+
+src/rust/Cargo.lock
+src/rust/target/*

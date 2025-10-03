@@ -1,12 +1,11 @@
+include("general_utils.jl")
+
 function compile_rust(filename)
     outfile = mktempdir() * "lib.so"
     cmd = `rustc $filename --crate-type=cdylib -o $outfile`
     run(cmd)
     return outfile
 end
-
-
-get_pkg_dir() = @__DIR__
 
 
 using Libdl
