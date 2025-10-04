@@ -7,7 +7,3 @@ edition = "2024"
 name = "typst2json"
 path = "src/lib.rs"
 crate-type = ["cdylib"]
-
-[[bin]]
-name = "typst2jsonbin"
-path = "src/main.rs"

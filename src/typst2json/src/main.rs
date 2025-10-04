@@ -1,10 +1,22 @@
-use typst2json::typst_to_json;
-use std::ffi::CStr;
+use std::env;
+
+fn typst_to_json_safe(
+    typst_file: String,
+    font_path: String,
+) -> String {
+    let mut res = String::from("");
+    res = res + &typst_file + &font_path;
+    return res
+}
 
 fn main() {
-    let v1 = vec![72i8, 101i8, 108i8, 108i8, 111i8, 32i8];
-    let v2 = vec![119i8, 111i8, 114i8, 108i8, 100i8, 0i8];
-    let out = typst_to_json(v1.as_ptr(), v2.as_ptr());
-    let str_out = unsafe {CStr::from_ptr(out)};
-    dbg!(str_out.to_str().expect("Please tell me this works"));
+    let args: Vec<String> = env::args().collect();
+    if args.len() != 3 {
+        panic!("You must call with 2 args; called with {:?}", args);
+    }
+    let typst_file = args[1].clone();
+    let font_path = args[2].clone();
+
+    let out = typst_to_json_safe(typst_file, font_path);
+    println!("{}", out);
 }
