@@ -1,21 +1,17 @@
 include("general_utils.jl")
 
+# using Libdl
+
 function build_rust_lib()
     cmd = `cargo build --lib`
     cd(get_rust_dir()) do
         run(cmd)
     end
-    return joinpath(get_rust_dir(), "target", "debug", "rust")
+    return joinpath(get_rust_dir(), "target", "debug", "libtypst2json.so")
 end
 
-
-
-using Libdl
-
-lib_path = compile_rust(joinpath(get_pkg_dir(), "rust/hellojulia.rs"))
-# lib = Libdl.dlopen(lib_path)
-list_symbols = `nm -D $lib_path`
-run(list_symbols)
+lib_path = build_rust_lib()
+run(`nm -D $lib_path`)
 
 function typst_to_json(typst_string, font_path)
     # vec_typst_string = UInt8.(collect(typst_string))

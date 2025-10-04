@@ -6,6 +6,7 @@ edition = "2024"
 [lib]
 name = "typst2json"
 path = "src/lib.rs"
+crate-type = ["cdylib"]
 
 [[bin]]
 name = "typst2jsonbin"
