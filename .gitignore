@@ -8,5 +8,5 @@ layout-cli/target/*
 
 layout-cli/output.pdf
 
-src/rust/Cargo.lock
-src/rust/target/*
+src/typst2json/Cargo.lock
+src/typst2json/target/*
