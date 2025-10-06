@@ -3,7 +3,19 @@ uuid = "70a4cee5-512b-407d-ae9e-69240957e69b"
 authors = ["Henrik Wolf <h.wolf@amolf.nl> and contributors"]
 version = "1.0.0-DEV"
 
+[deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+MathTeXEngine = "0a4f8689-d25c-4efe-a92b-7142dfc1aa53"
+TestItems = "1c621080-faea-4a02-84b6-bbd5e436b8fe"
+Typstry = "f0ed7684-a786-439e-b1e3-3b82803b501e"
+
 [compat]
+CairoMakie = "0.15.6"
+Makie = "0.24.6"
+MathTeXEngine = "0.6.6"
+TestItems = "1.0.0"
+Typstry = "0.6.2"
 julia = "1.10"
 
 [extras]
