@@ -26,7 +26,7 @@ end
 function compile_string(str)
     runcmd = get_run_cmd()
     path = get_rust_dir()
-    input_cmd = `echo '$(escape_string(str))'` # definitely not safe
+    input_cmd = `echo $(str)` # definitely not safe
 
     return execute(runcmd; input=input_cmd, path=path)
 end
@@ -42,11 +42,14 @@ end
 
 # compile_file(joinpath(get_rust_dir(), "template.typ"))
 
-# example_str = raw"""// template.typ
-# #set page(paper: "a4")
-# #set text(font: "Fira Math", 11pt)
-# #show math.equation: set text(font: "Fira Math")
-# $sum x/y$
-# """
+example_str = raw"""// template.typ
+#set page(paper: "a4")
+#set text(font: "Fira Math", 11pt)
+#show math.equation: set text(font: "Fira Math")
+$sum x/y$
+"""
+
+run(`echo $(example_str)`;)
+
 # escape_string(example_str)
-# compile_string(example_str)
+# output, errput = compile_string(example_str)
