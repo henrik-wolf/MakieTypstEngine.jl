@@ -9,7 +9,7 @@ function execute(cmd::Cmd; input=nothing, path=".")
 
     inputcmd = isnothing(input) ? `echo ''` : input
     cd(path) do
-        process = run(pipeline(ignorestatus(cmd); stdin=input_cmd, stdout = out, stderr = err))
+        process = run(pipeline(ignorestatus(cmd); stdin=inputcmd, stdout = out, stderr = err))
     end
     close(out.in)
     close(err.in)
@@ -41,3 +41,12 @@ function compile_file(filename)
 end
 
 # compile_file(joinpath(get_rust_dir(), "template.typ"))
+
+# example_str = raw"""// template.typ
+# #set page(paper: "a4")
+# #set text(font: "Fira Math", 11pt)
+# #show math.equation: set text(font: "Fira Math")
+# $sum x/y$
+# """
+# escape_string(example_str)
+# compile_string(example_str)
