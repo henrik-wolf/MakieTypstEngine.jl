@@ -1,9 +1,0 @@
-[package]
-name = "typst2json"
-version = "0.1.0"
-edition = "2024"
-
-[lib]
-name = "typst2json"
-path = "src/lib.rs"
-crate-type = ["cdylib"]

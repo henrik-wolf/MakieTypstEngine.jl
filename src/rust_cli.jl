@@ -1,8 +1,6 @@
 include("general_utils.jl")
 
-run_cmd = `cargo run`
-path = get_rust_dir()
-input_cmd = `cat template.typ`
+get_run_cmd() = `cargo run`
 
 ## Copied from https://discourse.julialang.org/t/capture-stdout-and-stderr-in-case-a-command-fails/101772/3
 function execute(cmd::Cmd; input=nothing, path=".")
@@ -25,4 +23,21 @@ function execute(cmd::Cmd; input=nothing, path=".")
 end
 
 
-output, errput = execute(run_cmd; input=input_cmd, path=path)
+function compile_string(str)
+    runcmd = get_run_cmd()
+    path = get_rust_dir()
+    input_cmd = `echo '$(escape_string(str))'` # definitely not safe
+
+    return execute(runcmd; input=input_cmd, path=path)
+end
+
+function compile_file(filename)
+    runcmd = get_run_cmd()
+    path = get_rust_dir()
+    new_filename = relpath(filename, path)
+    input_cmd = `cat '$(escape_string(str))'` # definitely not safe
+
+    return execute(runcmd; input=input_cmd, path=path)
+end
+
+# compile_file(joinpath(get_rust_dir(), "template.typ"))
