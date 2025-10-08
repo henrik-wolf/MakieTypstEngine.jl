@@ -13,15 +13,50 @@ function to_preamble(
     strokewidth,
 )
     base_preamble = Typstry.preamble(context)
-    makie_preamble = "#set text($(fontsize)pt)"
+    makie_preamble = """
+    #set text($(fontsize)pt)
+    #set text(font: "Fira Math", 11pt)
+    #show math.equation: set text(font: "Fira Math")
+    """
     base_preamble * makie_preamble
 end
 
+
+"""
+Figure out the path to the fontfile represented by the FTFont object on `font`.
+This is necessary, as the rust cli needs a path to the font, as well as its name.
+"""
 function to_fontpath(font)
     return joinpath(dirname(@__DIR__), "layout-cli", "fonts", "FiraMath-Regular.otf")
 end
 
-function generate_typst_elements(input_text, preamble, fontpath) end
+function parse_location(location)
+    x = parse(Float64, location["x"][1:end-2])
+    y = parse(Float64, location["y"][1:end-2])
+    return Point{2,Float64}(x, y)
+end
+
+"""
+This is where the magic happens.
+"""
+function generate_typst_elements(input_text, preamble, fontpath)
+    full_document = """
+    $preamble
+
+    // user code
+    $input_text
+    """
+    all_els = compile_string(full_document)
+
+    elements = map(all_els) do el
+        if el["item"]["type"] == "text"
+            (parse_location(el["location"]), 1.0)
+        else
+        end
+    end
+
+    # filter(isnothing, elements)
+end
 
 function typstelems_and_glyph_collection(
     input_text::TypstString,
@@ -50,11 +85,17 @@ function typstelems_and_glyph_collection(
         strokewidth,
     )
 
-    # get all elements (TODO)
-    all_els = generate_typst_elements(input_text, preamble, to_fontpath(font))
+    fontpath = to_fontpath(font)
+
+    # get all elements
+    all_els = generate_typst_elements(input_text, preamble, fontpath)
+    @debug all_els
 
     input_text = L"\frac{\int_3^{200} x^2 dx}{z^6}"
+    input_text = L"x^2"
     args = (fontsize, align, rotation, color, strokecolor, strokewidth, word_wrap_width)
+    els = MathTeXEngine.generate_tex_elements(input_text)
+    @debug els
     return Makie.texelems_and_glyph_collection(input_text, args...)
 end
 
