@@ -4,7 +4,7 @@ using Typstry
 using Makie
 using MathTeXEngine
 
-# Write your package code here.
+include("rust_cli.jl")
 
 # we need a way to:
 # - represent a piece of typst code in julia (using typstry, I guess)
