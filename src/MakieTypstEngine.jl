@@ -3,6 +3,7 @@ using TestItems
 using Typstry
 using Makie
 using MathTeXEngine
+using JSON
 
 include("rust_cli.jl")
 
