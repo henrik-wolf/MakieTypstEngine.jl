@@ -1,3 +1,5 @@
+# MARK: prepare render
+
 """
 Construct the preamble for the typst document from the Makie Theme
 """
@@ -22,10 +24,44 @@ function to_fontpath(font)
     return joinpath(dirname(@__DIR__), "layout-cli", "fonts", "FiraMath-Regular.otf")
 end
 
+# MARK: post render cleanup
 function parse_location(location)
     x = parse(Float64, location["x"][1:end-2])
     y = parse(Float64, location["y"][1:end-2])
     return Point{2,Float64}(x, y)
+end
+
+function append_text!(target, text, location = Point2f(0, 0))
+    text["location"] = location
+    push!(target, text)
+end
+
+function append_line!(target, line, location = Point2f(0, 0))
+    line["location"] = location
+    delta = parse_location(line["content"]["to"])
+    line["content"]["to"] = location + delta
+    push!(target, line)
+end
+
+function append_group!(target, group_els, offset = Point2f(0, 0))
+    for el in group_els
+        location = parse_location(el["location"]) + offset
+        if el["type"] == "text"
+            append_text!(target, el, location)
+        elseif el["type"] == "line"
+            append_line!(target, el, location)
+        elseif el["type"] == "group"
+            append_group!(target, el["content"], location)
+        else
+            throw(ArgumentError("encountered unknown type when processing results: $(el["type"])"))
+        end
+    end
+end
+
+function unroll_groups_and_locations(elements)
+    unrolled_elements = []
+    append_group!(unrolled_elements, elements, Point2f(0, 0))
+    return unrolled_elements
 end
 
 """
@@ -38,17 +74,15 @@ function generate_typst_elements(input_text, preamble, fontpath)
     // user code
     $input_text
     """
-    all_els = compile_string(full_document)
+    all_els = full_document |> compile_string |> unroll_groups_and_locations
 
-    elements = map(all_els) do el
-        if el["item"]["type"] == "text"
-            (parse_location(el["location"]), 1.0)
-        else
-        end
-    end
 
-    # filter(isnothing, elements)
+
+    return all_els
 end
+
+
+# MARK: Makie source inspired functions
 
 function typstelems_and_glyph_collection(input_text::TypstString, fontsize,
     font, align, rotation, justification, lineheight, word_wrap_width,
