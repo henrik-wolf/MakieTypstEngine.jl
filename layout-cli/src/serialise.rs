@@ -58,11 +58,17 @@ fn serialise_item(item: &FrameItem) -> Option<serde_json::Value> {
     match item {
         FrameItem::Text(x) => Some(serde_json::json!({
             "font": x.font.info(),
-            "text": x.text
+            "text": x.text,
+            "size": format!("{:?}", x.size)
         })),
         FrameItem::Group(x) => Some(serde_json::json!(SerializableFrame(x.frame.clone()))),
         FrameItem::Shape(shape, _) => match shape.geometry {
-            Geometry::Line(point) => Some(serde_json::json!({"to": serialise_point(&point)})),
+            Geometry::Line(point) => {
+                let ser_point = serialise_point(&point);
+                let width = shape.stroke.clone().unwrap().thickness;
+
+                Some(serde_json::json!({"to": ser_point, "thickness": format!("{:?}", width)}))
+            }
             _ => None,
         },
         // _ => serde_json::json!({
