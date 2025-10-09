@@ -4,6 +4,7 @@ using Typstry
 using Makie
 using MathTeXEngine
 using JSON
+using FreeTypeAbstraction
 
 include("rust_cli.jl")
 
