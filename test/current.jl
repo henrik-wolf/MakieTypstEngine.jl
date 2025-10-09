@@ -95,7 +95,9 @@ end
 
 
 let
-    f = Figure(size = (1600, 900), fontsize = 10)
-    ax = Axis(f[1, 1], xlabel = typst"$1/(1 + e^(-beta x))$")
+    f = Figure()
+    ax = Axis(f[1, 1], xlabel = typst"$1/(1 + e^(-beta x))$", xlabelsize = 20)
+    ax = Axis(f[1, 2], xlabel = typst"$1/(1 + e^(-beta x))$", xlabelsize = 10)
+    text!(ax, Point2f(0, 0), text = typst"$sum_(i=1)^5 i^2$")
     f
 end
