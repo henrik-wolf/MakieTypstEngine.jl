@@ -2,7 +2,7 @@ use serde_json;
 use std::fs;
 use std::io::{self, Read, Write, stdout};
 use typst::layout::PagedDocument;
-use typst_as_lib::TypstEngine;
+use typst_as_lib::{TypstEngine, typst_kit_options::TypstKitFontOptions};
 use typst_pdf;
 
 mod serialise;
@@ -10,7 +10,6 @@ use crate::serialise::SerializableFrame;
 
 // Set font path
 // TODO: set this from the julia side, maybe as args?
-static FONT: &[u8] = include_bytes!("../fonts/FiraMath-Regular.otf");
 static _OUTPUT: &str = "output.pdf";
 
 fn main() {
@@ -25,7 +24,8 @@ fn main() {
     let sources = [(virtual_path, buffer.as_str())];
     let engine = TypstEngine::builder()
         .with_static_source_file_resolver(sources)
-        .fonts([FONT])
+        .search_fonts_with(TypstKitFontOptions::default())
+        // .fonts([FONT])
         .build();
     let doc: PagedDocument = engine.compile(virtual_path).output.expect("errrrrror!");
 

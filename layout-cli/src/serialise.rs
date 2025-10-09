@@ -13,6 +13,8 @@ impl Serialize for SerializableFrame {
         let SerializableFrame(frame) = self;
         let mut seq = serializer.serialize_seq(Some(frame.layer()))?;
         for (point, item) in frame.items() {
+            dbg!(point);
+            dbg!(item);
             let serialised_item = serialise_item(item);
 
             if None == serialised_item {
@@ -27,8 +29,6 @@ impl Serialize for SerializableFrame {
                 "item": serialised_item
             });
             seq.serialize_element(&full_entry)?;
-            dbg!(point);
-            dbg!(item);
         }
         seq.end()
     }
@@ -38,6 +38,7 @@ fn serialise_item(item: &FrameItem) -> Option<serde_json::Value> {
     match item {
         FrameItem::Text(x) => Some(serde_json::json!({
             "type": "text",
+            "font": x.font.info(),
             "content": x.text
         })),
         // FrameItem::Group(x) => serde_json::json!({
