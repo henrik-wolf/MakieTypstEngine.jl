@@ -10,6 +10,7 @@ use crate::serialise::SerializableFrame;
 
 // Set font path
 // TODO: set this from the julia side, maybe as args?
+// static FONT: &[u8] = include_bytes!("../fonts/FiraMath-Regular.otf");
 static _OUTPUT: &str = "output.pdf";
 
 fn main() {
