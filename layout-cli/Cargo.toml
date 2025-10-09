@@ -7,5 +7,5 @@ edition = "2024"
 serde = "1.0.228"
 serde_json = "1.0.145"
 typst = "0.13.1"
-typst-as-lib = "0.14.4"
+typst-as-lib = { version = "0.14.4", features = ["typst-kit-fonts"] }
 typst-pdf = "0.13.1"
