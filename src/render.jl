@@ -1,16 +1,8 @@
 """
 Construct the preamble for the typst document from the Makie Theme
 """
-function to_preamble(
-    fontsize,
-    font,
-    align,
-    rotation,
-    justification,
-    word_wrap_width,
-    color,
-    strokecolor,
-    strokewidth,
+function to_preamble(fontsize, font, align, rotation, justification,
+    word_wrap_width, color, strokecolor, strokewidth,
 )
     base_preamble = Typstry.preamble(context)
     makie_preamble = """
@@ -58,32 +50,14 @@ function generate_typst_elements(input_text, preamble, fontpath)
     # filter(isnothing, elements)
 end
 
-function typstelems_and_glyph_collection(
-    input_text::TypstString,
-    fontsize,
-    font,
-    align,
-    rotation,
-    justification,
-    lineheight,
-    word_wrap_width,
-    color,
-    strokecolor,
-    strokewidth,
+function typstelems_and_glyph_collection(input_text::TypstString, fontsize,
+    font, align, rotation, justification, lineheight, word_wrap_width,
+    color, strokecolor, strokewidth,
 )
 
     halign, valign = align
-    preamble = to_preamble(
-        fontsize,
-        font,
-        align,
-        rotation,
-        justification,
-        word_wrap_width,
-        color,
-        strokecolor,
-        strokewidth,
-    )
+    preamble = to_preamble(fontsize, font, align, rotation, justification,
+        word_wrap_width, color, strokecolor, strokewidth)
 
     fontpath = to_fontpath(font)
 
@@ -101,22 +75,9 @@ end
 
 
 # adds the lines to the output. Not sure if we really need this...
-function append_typst_linesegment_data!(
-    outputs,
-    tex_offsets,
-    tex_elements,
-    fontsize,
-    rotation,
-    color,
-    offset,
+function append_typst_linesegment_data!(outputs, tex_offsets, tex_elements,
+    fontsize, rotation, color, offset,
 )
-    Makie.append_tex_linesegment_data!(
-        outputs,
-        tex_offsets,
-        tex_elements,
-        fontsize,
-        rotation,
-        color,
-        offset,
-    )
+    Makie.append_tex_linesegment_data!(outputs, tex_offsets, tex_elements,
+        fontsize, rotation, color, offset)
 end
