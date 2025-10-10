@@ -90,8 +90,16 @@ end
 function to_glyphcollection(text_els, align, rotation, color, strokecolor, strokewidth)
     halign, valign = align
 
+    cached_fonts = Dict{String,FTFont}()
+
     text_info = map(text_els) do el
-        font = findfont(el["content"]["font"]["family"])
+        family = el["content"]["font"]["family"]
+
+        if !haskey(cached_fonts, family)
+            cached_fonts[family] = findfont(family)
+        end
+
+        font = cached_fonts[family]
 
         # TODO: assumes that each text element contains only one character
         firstchar = first(el["content"]["text"])
