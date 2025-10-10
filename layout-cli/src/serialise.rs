@@ -1,7 +1,8 @@
 use serde::Serialize;
 use serde::ser::SerializeSeq;
-use typst::layout::Frame;
 use typst::layout::FrameItem;
+use typst::layout::{Frame, Point};
+use typst::visualize::Geometry;
 
 pub struct SerializableFrame(pub Frame);
 
@@ -13,6 +14,10 @@ impl Serialize for SerializableFrame {
         let SerializableFrame(frame) = self;
         let mut seq = serializer.serialize_seq(Some(frame.layer()))?;
         for (point, item) in frame.items() {
+            dbg!(point);
+            dbg!(item);
+            let serialised_point = serialise_point(point);
+            let serialised_type = serialise_type(item);
             let serialised_item = serialise_item(item);
 
             if None == serialised_item {
@@ -20,32 +25,52 @@ impl Serialize for SerializableFrame {
             }
 
             let full_entry = serde_json::json!({
-                "location": {
-                    "x": format!("{:?}", point.x),
-                    "y": format!("{:?}", point.y),
-                },
-                "item": serialised_item
+                "location": serialised_point,
+                "type": serialised_type,
+                "content": serialised_item
             });
             seq.serialize_element(&full_entry)?;
-            dbg!(point);
-            dbg!(item);
         }
         seq.end()
+    }
+}
+
+fn serialise_point(point: &Point) -> serde_json::Value {
+    serde_json::json!({
+                    "x": format!("{:?}", point.x),
+                    "y": format!("{:?}", point.y),
+    })
+}
+
+fn serialise_type(item: &FrameItem) -> Option<serde_json::Value> {
+    match item {
+        FrameItem::Text(_) => Some(serde_json::json!("text")),
+        FrameItem::Group(_) => Some(serde_json::json!("group")),
+        FrameItem::Shape(shape, _) => match shape.geometry {
+            Geometry::Line(_) => Some(serde_json::json!("line")),
+            _ => None,
+        },
+        _ => None,
     }
 }
 
 fn serialise_item(item: &FrameItem) -> Option<serde_json::Value> {
     match item {
         FrameItem::Text(x) => Some(serde_json::json!({
-            "type": "text",
-            "content": x.text
+            "font": x.font.info(),
+            "text": x.text,
+            "size": format!("{:?}", x.size)
         })),
-        // FrameItem::Group(x) => serde_json::json!({
-        //     "type": "group",
-        // }),
-        // FrameItem::Shape(shape, span) => serde_json::json!({
-        //     "type": "shape",
-        // }),
+        FrameItem::Group(x) => Some(serde_json::json!(SerializableFrame(x.frame.clone()))),
+        FrameItem::Shape(shape, _) => match shape.geometry {
+            Geometry::Line(point) => {
+                let ser_point = serialise_point(&point);
+                let width = shape.stroke.clone().unwrap().thickness;
+
+                Some(serde_json::json!({"to": ser_point, "thickness": format!("{:?}", width)}))
+            }
+            _ => None,
+        },
         // _ => serde_json::json!({
         //     "type": "something else..."
         // }),

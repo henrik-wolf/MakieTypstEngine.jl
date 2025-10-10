@@ -7,44 +7,20 @@
 # packages (alongside Makie) to get what is here promised.
 
 # this is the main entry point
-function Makie.convert_text_string!(
-    outputs::NamedTuple,
-    input_text::TypstString,
-    i,
-    N,
-    fontsize,
-    font,
-    align,
-    rotation,
-    justification,
-    lineheight,
-    word_wrap_width,
-    offset,
-    fonts,
-    color,
-    strokecolor,
-    strokewidth,
+function Makie.convert_text_string!(outputs::NamedTuple, input_text::TypstString,
+    i, N, fontsize, font, align, rotation, justification, lineheight,
+    word_wrap_width, offset, fonts, color, strokecolor, strokewidth,
 )
     args =
-        Makie.sv_getindex.(
-            (
-                fontsize,
-                font,
-                align,
-                rotation,
-                justification,
-                lineheight,
-                word_wrap_width,
-                color,
-                strokecolor,
-                strokewidth,
-            ),
+        Makie.sv_getindex.((fontsize, font, align, rotation, justification,
+                lineheight, word_wrap_width, color, strokecolor, strokewidth),
             i,
         )
 
     # this is where the real work happens. Takes the Typst String and text format args
     # returns MathTexEngine elements in tex_elements, a GlyphCollection gc and some offset as Point2f
-    tex_elements, gc, tex_offsets = typstelems_and_glyph_collection(input_text, args...)
+    line_elements, gc, align_offset = typstelems_and_glyph_collection(input_text, args...)
+
     curr = length(outputs.glyphindices)
     n = length(gc.glyphs)
 
@@ -62,20 +38,16 @@ function Makie.convert_text_string!(
     append!(outputs.text_scales, Makie.collect_vector(gc.scales, n))
 
     # adds all lines from fractions and such to the outputs
-    append_typst_linesegment_data!(
-        outputs,
-        tex_offsets,
-        tex_elements,
+    append_typst_linesegment_data!(outputs, align_offset, line_elements,
         # fontsize
         args[1],
         # rotation
         args[4],
         # color
-        args[8],
-        Makie.sv_getindex(offset, i),
+        args[8], Makie.sv_getindex(offset, i),
     )
 
-    return
+    return nothing
 end
 
 Makie.iswhitespace(l::TypstString) = Makie.iswhitespace(replace(l.text, '$' => ""))

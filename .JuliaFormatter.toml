@@ -1,1 +1,2 @@
-margin = 92
+margin = 192
+join_lines_based_on_source = true
