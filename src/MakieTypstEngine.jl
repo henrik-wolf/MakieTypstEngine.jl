@@ -6,6 +6,17 @@ using MathTeXEngine
 using JSON
 using FreeTypeAbstraction
 
+using Scratch
+using Pkg.TOML
+
+include("build_typst_cli.jl")
+
+function __init__()
+    scratch_name = "typst-layout-cli-$(cli_version.major).$(cli_version.minor).$(cli_version.patch)"
+    global cli_version_specific_scratch[] = @get_scratch!(scratch_name)
+    build_cli()
+end
+
 include("rust_cli.jl")
 
 # we need a way to:
