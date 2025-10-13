@@ -1,6 +1,7 @@
 include("general_utils.jl")
 
 get_run_cmd() = `cargo run`
+# get_run_cmd() = cli_binary[]
 # get_run_cmd() = `target/release/layout-cli`
 
 ## Copied from https://discourse.julialang.org/t/capture-stdout-and-stderr-in-case-a-command-fails/101772/3
