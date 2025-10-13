@@ -39,9 +39,18 @@ $sum x/y^2$
 test *test*
 """
 
+let
+    f = Figure(size = (400, 200))
+    a = [1, 2, 3]
+    # Label(f[1, 1], typst"$sin(x^2) = \(a; mode=math)$")
+    Label(f[1, 1], typst"$sum x/y^2$ test *test* _test_", fontsize = 40)
+    f
+end
+
 
 output_elements = MakieTypstEngine.generate_typst_elements("", example_str, "")
 
+findfont("Fira Sans Regular")
 
 teststring = raw"""
 #set page(margin: 1em, height: auto, width: auto, fill: white)
@@ -57,9 +66,16 @@ $1/(1 + e^(-beta x))$"""
 
 font = findfont("Fira Math")
 
+id = FreeTypeAbstraction.glyph_index(font, 's')
+Makie.GlyphExtent(font, id)
+Makie.GlyphExtent(font, 's')
+
 t, l = MakieTypstEngine.generate_typst_elements("", teststring, "")
+t = MakieTypstEngine.generate_typst_elements("", teststring, "")
 
 l
+
+@bs MakieTypstEngine.generate_typst_elements("", teststring, "")
 
 
 t[1]["content"]
@@ -93,8 +109,16 @@ let
     f
 end
 
-
 let
+    f = Figure(size = (100, 100))
+    a = [1, 2, 3]
+    Label(f[1, 1], typst"$sin(x^2) = \(a; mode=math)$")
+    f
+end
+
+typst"$ sin(x^2) = \([1,2,3], mode=math)$".text
+
+@time let
     f = Figure()
     ax = Axis(f[1, 1], xlabel = typst"$1/(1 + e^(-beta x))$", xlabelsize = 20)
     ax = Axis(f[1, 2], xlabel = typst"$1/(1 + e^(-beta x))$", xlabelsize = 10)
