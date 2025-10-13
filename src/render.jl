@@ -23,6 +23,20 @@ function to_fontpath(font)
     return joinpath(dirname(@__DIR__), "layout-cli", "fonts", "FiraMath-Regular.otf")
 end
 
+@kwdef struct TypstGlyph
+    font::Dict{String,Any}
+    size::Float64
+    location::Point{2,Float64}
+    text::String
+    glyph::Dict{String,Any}
+end
+
+@kwdef struct TypstLine
+    from::Point{2,Float64}
+    to::Point{2,Float64}
+    thickness::Float64
+end
+
 
 # MARK: post render cleanup
 parse_pt(str) = parse(Float64, str[1:end-2])
@@ -36,7 +50,21 @@ end
 function append_text!(target, text, location = Point2f(0, 0))
     text["location"] = location
     text["content"]["size"] = parse_pt(text["content"]["size"])
-    push!(target, text)
+
+    cumulated_advance = 0.0
+    for glyph in text["content"]["glyphs"]
+        c = text["content"]
+        tg = TypstGlyph(
+            font = c["font"],
+            size = c["size"],
+            location = text["location"] + Point2f(cumulated_advance, 0.0),
+            text = c["text"],
+            glyph = glyph,
+        )
+        cumulated_advance += tg.size * parse_pt(tg.glyph["x_advance"])
+
+        push!(target, tg)
+    end
 end
 
 function append_line!(target, line, location = Point2f(0, 0))
@@ -44,7 +72,12 @@ function append_line!(target, line, location = Point2f(0, 0))
     delta = parse_location(line["content"]["to"])
     line["content"]["to"] = location + delta
     line["content"]["thickness"] = parse_pt(line["content"]["thickness"])
-    push!(target, line)
+    tl = TypstLine(
+        from = line["location"],
+        to = line["content"]["to"],
+        thickness = line["content"]["thickness"],
+    )
+    push!(target, tl)
 end
 
 function append_group!(target, group_els, offset = Point2f(0, 0))
@@ -82,8 +115,8 @@ function generate_typst_elements(input_text, preamble, fontpath)
 
     all_els = full_document |> compile_string |> unroll_groups_and_locations
     return (
-        filter(i -> i["type"] == "text", all_els),
-        filter(i -> i["type"] == "line", all_els),
+        filter(i -> (i isa TypstGlyph), all_els),
+        filter(i -> (i isa TypstLine), all_els),
     )
 end
 
@@ -93,7 +126,8 @@ function to_glyphcollection(text_els, align, rotation, color, strokecolor, strok
     cached_fonts = Dict{String,FTFont}()
 
     text_info = map(text_els) do el
-        family = el["content"]["font"]["family"]
+        # TODO: figure out some way to let the user specify this mapping?
+        family = el.font["family"] * " " * el.font["variant"]["style"][1:2]
 
         if !haskey(cached_fonts, family)
             cached_fonts[family] = findfont(family)
@@ -101,14 +135,12 @@ function to_glyphcollection(text_els, align, rotation, color, strokecolor, strok
 
         font = cached_fonts[family]
 
-        # TODO: assumes that each text element contains only one character
-        firstchar = first(el["content"]["text"])
+        glyphindex = el.glyph["id"]
 
-        glyphindex = FreeTypeAbstraction.glyph_index(font, firstchar)
-        extent = Makie.GlyphExtent(font, firstchar)
-        scale = Vec2f(el["content"]["size"])
+        extent = Makie.GlyphExtent(font, glyphindex)
+        scale = Vec2f(el.size)
         bbox = Makie.height_insensitive_boundingbox_with_advance(extent)
-        baseposition = to_ndim(Vec3f, el["location"], 0)
+        baseposition = to_ndim(Vec3f, el.location, 0)
         (font, glyphindex, extent, bbox * scale[1], baseposition, scale)
     end
 
@@ -180,13 +212,13 @@ function append_typst_linesegment_data!(outputs, align_offset, line_elements,
     pos_idx = first(last(outputs.text_blocks))
 
     for el in line_elements
-        from = el["location"]
-        to = el["content"]["to"]
+        from = el.from
+        to = el.to
 
         p0 = rotation * to_ndim(Point3f, from .- align_offset, 0) .+ offset
         p1 = rotation * to_ndim(Point3f, to .- align_offset, 0) .+ offset
         push!(outputs.linesegments, p0, p1)
-        thickness = el["content"]["thickness"]
+        thickness = el.thickness
         push!(outputs.linewidths, thickness, thickness)
         push!(outputs.linecolors, color, color)
         push!(outputs.lineindices, block_idx => pos_idx, block_idx => pos_idx)
