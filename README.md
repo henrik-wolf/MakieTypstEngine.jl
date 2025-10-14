@@ -20,19 +20,26 @@ This package provides mostly glue code that enables you to put any (with some re
 normal `Strings`, `RichText` or `LaTeXString`:
 
 ```julia
+using CairoMakie
+using MakieTypstEngine
+font = MakieTypstEngine.MTEFont("TeXGyrePagella")
+
 typst_string = typst"""
 this is an integral:
 $ integral_0^t sin(x)^2 dif x $
 """
-fig = Figure()
+
+fig = Figure(fonts = (; regular = font))
 Label(fig[1, 2], typst_string, fontsize = 20, tellheight = false)
-ax = Axis(fig[1, 1], xlabel = typst"time $[s]$", ylabel = typst"$f(t)$")
+ax = Axis(fig[1, 1], xlabel = typst"time $[t]$", ylabel = typst"$f(t)$")
 lines!(ax, 0 .. 10, sin, label = typst"$f(t) = sin(t)$")
 lines!(ax, 0 .. 10, cos, label = typst"$f(t) = cos(t)$")
 lines!(ax, 0 .. 10, t -> sin(t + π) + sin(t + 2π)^2, label = typst"$ f(t) = sum_(i=1)^2 sin^i (t+pi i) $")
 axislegend(ax)
 fig
 ```
+will give you something like:
+<img src="./images/examplefig.png" width="600">
 
 ## Fonts
 MakieTypstEngine makes use of the font styling options which are exposed in Makie. (such as `fontsize`, `color` or `align`). The way they are handled are however not universal, some are passed to and retrieved from, typst, while others, are applied after layouting.
