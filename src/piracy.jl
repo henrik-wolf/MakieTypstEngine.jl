@@ -12,8 +12,12 @@ function Makie.convert_text_string!(outputs::NamedTuple, input_text::TypstString
     word_wrap_width, offset, fonts, color, strokecolor, strokewidth,
 )
     args =
-        Makie.sv_getindex.((fontsize, font, align, rotation, justification,
-                lineheight, word_wrap_width, color, strokecolor, strokewidth),
+        Makie.sv_getindex.(
+            (
+                font, fontsize, justification,
+                align, rotation, color, strokecolor, strokewidth,
+                lineheight, word_wrap_width,
+            ),
             i,
         )
 
@@ -39,12 +43,10 @@ function Makie.convert_text_string!(outputs::NamedTuple, input_text::TypstString
 
     # adds all lines from fractions and such to the outputs
     append_typst_linesegment_data!(outputs, align_offset, line_elements,
-        # fontsize
-        args[1],
         # rotation
-        args[4],
+        args[5],
         # color
-        args[8], Makie.sv_getindex(offset, i),
+        args[6], Makie.sv_getindex(offset, i),
     )
 
     return nothing

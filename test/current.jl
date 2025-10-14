@@ -1,46 +1,49 @@
-using Typstry
-using Makie
 using CairoMakie
 using MakieTypstEngine
+
 using MathTeXEngine
 using FreeTypeAbstraction
 
-typst"""
-= test hallo!
-$x+y^2$
-"""
+newcm = MakieTypstEngine.MTEFont("TeXGyreHeros", :math)
 
-context
+FreeTypeAbstraction.family_name(newcm)
 
-TypstContext().context
-
-a = [1, 2, 3]
-
-a = typst"\(a)"
+MakieTypstEngine.additional_font_paths_mte()
 
 let
-    f = Figure(size = (1400, 700), fontsize = 40)
-    ax = Axis(
-        f[1, 1],
-        title = "Test",
-        xlabel = L"\frac{\int_3^{200} x^2 dx}{z^6}",
-        ylabel = typst"$x^2$",
-    )
+    f = Figure(size = (400, 800))
+    a = [1, 2, 3]
+    # Label(f[1, 1], typst"$sin(x^2) = \(a; mode=math)$")
+    Label(f[1, 1], typst"""$ sum x/y^2 $ test *test* _test_ _*test*_
 
+    test""", fontsize = 40, font = newcm)
+    f
+end
+
+@time let
+    f = Figure(size = (400, 800))
+    a = [1, 2, 3]
+    # Label(f[1, 1], typst"$sin(x^2) = \(a; mode=math)$")
+    Label(f[1, 1], """ test *test* _test_
+
+    test""", fontsize = 40, font = "Fira Sans")
+    ax = Axis(f[2, 1])
+    text!(ax, Point2f(0, 0), text = "sin(x^2) 
+
+     test", font = "Fira Sans", align = (:left, :center), justification = :right)
     f
 end
 
 
-example_str = raw"""// template.typ
-#set page(paper: "a6")
-#set text(font: "Times New Roman", 11pt)
-#show math.equation: set text(font: "Fira Math")
-$sum x/y^2$
-test *test*
-"""
+output_elements = MakieTypstEngine.generate_typst_elements("", example_str)
 
+output_elements[1][end]
 
-output_elements = MakieTypstEngine.generate_typst_elements("", example_str, "")
+a = Makie.to_font("Fira Sans")
+
+MakieTypstEngine.to_mathfont(a)
+
+FreeTypeAbstraction.family_name(a)
 
 
 teststring = raw"""
@@ -57,9 +60,16 @@ $1/(1 + e^(-beta x))$"""
 
 font = findfont("Fira Math")
 
+id = FreeTypeAbstraction.glyph_index(font, 's')
+Makie.GlyphExtent(font, id)
+Makie.GlyphExtent(font, 's')
+
 t, l = MakieTypstEngine.generate_typst_elements("", teststring, "")
+t = MakieTypstEngine.generate_typst_elements("", teststring, "")
 
 l
+
+@bs MakieTypstEngine.generate_typst_elements("", teststring, "")
 
 
 t[1]["content"]
@@ -93,11 +103,39 @@ let
     f
 end
 
+let
+    f = Figure(size = (100, 100))
+    a = [1, 2, 3]
+    Label(f[1, 1], typst"$sin(x^2) = \(a; mode=math)$")
+    f
+end
+
+typst"$ sin(x^2) = \([1,2,3], mode=math)$".text
 
 let
     f = Figure()
-    ax = Axis(f[1, 1], xlabel = typst"$1/(1 + e^(-beta x))$", xlabelsize = 20)
-    ax = Axis(f[1, 2], xlabel = typst"$1/(1 + e^(-beta x))$", xlabelsize = 10)
+    ax = Axis(f[1, 1], xlabel = typst"$1/(1 + e^(-beta x))$ test", xlabelsize = 20)
+    ax = Axis(f[1, 2], xlabel = "test", xlabelsize = 20)
     text!(ax, Point2f(0, 0), text = typst"$sum_(i=1)^5 i^2$")
     f
+end
+
+@edit Makie.to_font("est")
+
+
+let
+    typst_string = typst"""
+    this is an integral:
+    $ integral_0^t sin(x)^2 dif x $
+    """
+    fig = Figure()
+    Label(fig[1, 2], typst_string, fontsize = 20, tellheight = false)
+    Label(fig[2, 2], "this is an integral", fontsize = 20, tellheight = false)
+    Label(fig[2, 2], typst"this is an integral", fontsize = 20, tellheight = false)
+    ax = Axis(fig[1, 1], xlabel = typst"time $[s]$", ylabel = typst"$f(t)$")
+    lines!(ax, 0 .. 10, sin, label = typst"$f(t) = sin(t)$")
+    lines!(ax, 0 .. 10, cos, label = typst"$f(t) = cos(t)$")
+    lines!(ax, 0 .. 10, t -> sin(t + π) + sin(t + 2π)^2, label = typst"$ f(t) = sum_(i=1)^2 sin^i (t+pi i) $")
+    axislegend(ax)
+    fig
 end

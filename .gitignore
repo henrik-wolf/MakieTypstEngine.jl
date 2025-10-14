@@ -8,6 +8,9 @@ layout-cli/target/*
 
 layout-cli/output.pdf
 layout-cli/template.pdf
+layout-cli/output.json
+layout-cli/runtest.bash
+layout-cli/template.typ
 
 src/typst2json/Cargo.lock
 src/typst2json/target/*

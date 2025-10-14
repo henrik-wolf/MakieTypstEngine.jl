@@ -1,20 +1,26 @@
 use serde_json;
-use std::fs;
+use std::env::args;
+// use std::fs;
 use std::io::{self, Read, Write, stdout};
 use typst::layout::PagedDocument;
 use typst_as_lib::{TypstEngine, typst_kit_options::TypstKitFontOptions};
-use typst_pdf;
+// use typst_pdf;
 
 mod serialise;
 use crate::serialise::SerializableFrame;
 
-// Set font path
-// TODO: set this from the julia side, maybe as args?
-// static FONT: &[u8] = include_bytes!("../fonts/FiraMath-Regular.otf");
 static _OUTPUT: &str = "output.pdf";
 
 fn main() {
     // Read typst file from stdin to String
+    let args: Vec<String> = args().skip(1).collect();
+
+    let font_options = if args.len() > 0 {
+        TypstKitFontOptions::default().include_dirs(&args)
+    } else {
+        TypstKitFontOptions::default()
+    };
+
     let mut buffer = String::new();
     io::stdin()
         .read_to_string(&mut buffer)
@@ -25,20 +31,23 @@ fn main() {
     let sources = [(virtual_path, buffer.as_str())];
     let engine = TypstEngine::builder()
         .with_static_source_file_resolver(sources)
-        .search_fonts_with(TypstKitFontOptions::default())
+        .search_fonts_with(font_options)
         // .fonts([FONT])
         .build();
-    let doc: PagedDocument = engine.compile(virtual_path).output.expect("errrrrror!");
+    let doc: PagedDocument = engine
+        .compile(virtual_path)
+        .output
+        .expect("Compilation failed with error");
 
     // get first (and hopefully only...) frame of the result
     let ser_frame = SerializableFrame(doc.pages.first().unwrap().frame.clone());
     let frame_string = serde_json::to_string(&ser_frame).unwrap();
-    dbg!(&frame_string);
+    // dbg!(&frame_string);
     stdout().write_all(frame_string.as_bytes()).unwrap();
 
-    let options = Default::default();
-    let pdf = typst_pdf::pdf(&doc, &options).expect("Could not generate pdf.");
-    fs::write(_OUTPUT, pdf).expect("Could not write pdf.");
+    // let options = Default::default();
+    // let pdf = typst_pdf::pdf(&doc, &options).expect("Could not generate pdf.");
+    // fs::write(_OUTPUT, pdf).expect("Could not write pdf.");
 }
 
 // fn full_compile(file_string: Vec<u8>, font_string: Vec<u8>) -> Vec<u8> {}

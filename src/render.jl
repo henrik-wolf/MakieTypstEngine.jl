@@ -3,24 +3,34 @@
 """
 Construct the preamble for the typst document from the Makie Theme
 """
-function to_preamble(fontsize, font, align, rotation, justification,
-    word_wrap_width, color, strokecolor, strokewidth,
-)
+function to_preamble(font, fontsize, justification)
     base_preamble = Typstry.preamble(context)
     makie_preamble = """
-    #set text(font: "Fira Sans", $(fontsize)pt)
-    #show math.equation: set text(font: "Fira Math")
+    #set text(font: "$(to_typstfont(font))", $(fontsize)pt)
+    #set align($(justification))
+
+    #show math.equation: eq => {
+        set text(font: "$(to_mathfont(font))")
+        set align($(justification))
+        eq
+    }
     """
     base_preamble * makie_preamble
 end
 
 
-"""
-Figure out the path to the fontfile represented by the FTFont object on `font`.
-This is necessary, as the rust cli needs a path to the font, as well as its name.
-"""
-function to_fontpath(font)
-    return joinpath(dirname(@__DIR__), "layout-cli", "fonts", "FiraMath-Regular.otf")
+@kwdef struct TypstGlyph
+    font::Dict{String,Any}
+    size::Float64
+    location::Point{2,Float64}
+    text::String
+    glyph::Dict{String,Any}
+end
+
+@kwdef struct TypstLine
+    from::Point{2,Float64}
+    to::Point{2,Float64}
+    thickness::Float64
 end
 
 
@@ -36,7 +46,23 @@ end
 function append_text!(target, text, location = Point2f(0, 0))
     text["location"] = location
     text["content"]["size"] = parse_pt(text["content"]["size"])
-    push!(target, text)
+
+    cumulated_advance = 0.0
+    for glyph in text["content"]["glyphs"]
+        c = text["content"]
+        tg = TypstGlyph(
+            font = c["font"],
+            size = c["size"],
+            # TODO: there seems to be some spacing issues with just this approach.
+            # maybe it is not kerning aware?
+            location = text["location"] + Point2f(cumulated_advance, 0.0),
+            text = c["text"],
+            glyph = glyph,
+        )
+        cumulated_advance += tg.size * parse_pt(tg.glyph["x_advance"])
+
+        push!(target, tg)
+    end
 end
 
 function append_line!(target, line, location = Point2f(0, 0))
@@ -44,7 +70,12 @@ function append_line!(target, line, location = Point2f(0, 0))
     delta = parse_location(line["content"]["to"])
     line["content"]["to"] = location + delta
     line["content"]["thickness"] = parse_pt(line["content"]["thickness"])
-    push!(target, line)
+    tl = TypstLine(
+        from = line["location"],
+        to = line["content"]["to"],
+        thickness = line["content"]["thickness"],
+    )
+    push!(target, tl)
 end
 
 function append_group!(target, group_els, offset = Point2f(0, 0))
@@ -69,10 +100,10 @@ function unroll_groups_and_locations(elements)
 end
 
 """
-create a document from input text, preamble and (currently) fontpath,
-render it and return tuple of text and line elements
+create a document from input text and preamble, render it and return tuple of
+text and line elements.
 """
-function generate_typst_elements(input_text, preamble, fontpath)
+function generate_typst_elements(input_text, preamble)
     full_document = """
     $preamble
 
@@ -80,35 +111,42 @@ function generate_typst_elements(input_text, preamble, fontpath)
     $input_text
     """
 
-    all_els = full_document |> compile_string |> unroll_groups_and_locations
+    additional_font_paths = [assetpath(), MathTeXEngine.FONTS]
+
+
+    all_els = unroll_groups_and_locations(compile_string(full_document, additional_font_paths))
     return (
-        filter(i -> i["type"] == "text", all_els),
-        filter(i -> i["type"] == "line", all_els),
+        filter(i -> (i isa TypstGlyph), all_els),
+        filter(i -> (i isa TypstLine), all_els),
     )
 end
 
+"""
+Convert a flat list of layouted glyphs from typst to something that makie understands.
+"""
 function to_glyphcollection(text_els, align, rotation, color, strokecolor, strokewidth)
     halign, valign = align
 
     cached_fonts = Dict{String,FTFont}()
 
     text_info = map(text_els) do el
-        family = el["content"]["font"]["family"]
+        font = maybe_to_FTFont(from_typst_font(el.font))
 
-        if !haskey(cached_fonts, family)
-            cached_fonts[family] = findfont(family)
-        end
+        # TODO: doing caching in this way does not seem more efficient?
+        # font_repr = repr(el.font)
 
-        font = cached_fonts[family]
+        # if !haskey(cached_fonts, font_repr)
+        #     cached_fonts[font_repr] = maybe_to_FTFont(from_typst_font(el.font))
+        # end
 
-        # TODO: assumes that each text element contains only one character
-        firstchar = first(el["content"]["text"])
+        # font = cached_fonts[font_repr]
 
-        glyphindex = FreeTypeAbstraction.glyph_index(font, firstchar)
-        extent = Makie.GlyphExtent(font, firstchar)
-        scale = Vec2f(el["content"]["size"])
+        glyphindex = el.glyph["id"]
+
+        extent = Makie.GlyphExtent(font, glyphindex)
+        scale = Vec2f(el.size)
         bbox = Makie.height_insensitive_boundingbox_with_advance(extent)
-        baseposition = to_ndim(Vec3f, el["location"], 0)
+        baseposition = to_ndim(Vec3f, el.location, 0)
         (font, glyphindex, extent, bbox * scale[1], baseposition, scale)
     end
 
@@ -147,46 +185,51 @@ end
 
 
 # MARK: Makie source inspired functions
-
-function typstelems_and_glyph_collection(input_text::TypstString, fontsize,
-    font, align, rotation, justification, lineheight, word_wrap_width,
-    color, strokecolor, strokewidth,
+"""
+takes the input string, and runs the rendering pipeline on it. Returns
+the `TypstLines`, a `GlyphCollection` and an offset vector by which the glyphs
+have been shifted.
+"""
+function typstelems_and_glyph_collection(
+    # inputs to typst
+    input_text::TypstString, font, fontsize, justification,
+    # set by makie after render
+    align, rotation, color, strokecolor, strokewidth,
+    # currently unused
+    lineheight, word_wrap_width,
 )
+    # TODO: this feels hacky...
+    resolved_justification = if justification isa Makie.Automatic
+        align[1]
+    else
+        justification
+    end
 
-    preamble = to_preamble(fontsize, font, align, rotation, justification,
-        word_wrap_width, color, strokecolor, strokewidth)
+    preamble = to_preamble(font, fontsize, resolved_justification)
 
-    fontpath = to_fontpath(font)
-
-    # get all elements
-    text_els, line_els = generate_typst_elements(input_text, preamble, fontpath)
+    # compile to flat lists of glyphs and lines
+    text_els, line_els = generate_typst_elements(input_text, preamble)
 
     gc, offset = to_glyphcollection(text_els, align, rotation, color, strokecolor, strokewidth)
     return line_els, gc, offset
-
-    # input_text = L"\frac{1}{1+e^{-\beta x}}"
-    # args = (fontsize, align, rotation, color, strokecolor, strokewidth, word_wrap_width)
-    # els = MathTeXEngine.generate_tex_elements(input_text)
-    # return Makie.texelems_and_glyph_collection(input_text, args...)
 end
 
 
-# adds the lines to the output. Not sure if we really need this...
+"""
+Adds all the Lines that are returned by the typst layouter to the plot.
+"""
 function append_typst_linesegment_data!(outputs, align_offset, line_elements,
-    fontsize, rotation, color, offset,
+    rotation, color, offset,
 )
 
     block_idx = length(outputs.text_blocks)
     pos_idx = first(last(outputs.text_blocks))
 
     for el in line_elements
-        from = el["location"]
-        to = el["content"]["to"]
-
-        p0 = rotation * to_ndim(Point3f, from .- align_offset, 0) .+ offset
-        p1 = rotation * to_ndim(Point3f, to .- align_offset, 0) .+ offset
+        p0 = rotation * to_ndim(Point3f, el.from .- align_offset, 0) .+ offset
+        p1 = rotation * to_ndim(Point3f, el.to .- align_offset, 0) .+ offset
         push!(outputs.linesegments, p0, p1)
-        thickness = el["content"]["thickness"]
+        thickness = el.thickness
         push!(outputs.linewidths, thickness, thickness)
         push!(outputs.linecolors, color, color)
         push!(outputs.lineindices, block_idx => pos_idx, block_idx => pos_idx)
