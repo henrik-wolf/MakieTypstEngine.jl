@@ -183,14 +183,24 @@ takes the input string, and runs the rendering pipeline on it. Returns
 the `TypstLines`, a `GlyphCollection` and an offset vector by which the glyphs
 have been shifted.
 """
-function typstelems_and_glyph_collection(input_text::TypstString, fontsize,
-    font, align, rotation, justification, lineheight, word_wrap_width,
-    color, strokecolor, strokewidth,
+function typstelems_and_glyph_collection(
+    # inputs to typst
+    input_text::TypstString, font, fontsize, justification,
+    # set by makie after render
+    align, rotation, color, strokecolor, strokewidth,
+    # currently unused
+    lineheight, word_wrap_width,
 )
+    # TODO: this feels hacky...
+    resolved_justification = if justification isa Makie.Automatic
+        align[1]
+    else
+        justification
+    end
 
-    preamble = to_preamble(font, fontsize, justification)
+    preamble = to_preamble(font, fontsize, resolved_justification)
 
-    # get all elements
+    # compile to flat lists of glyphs and lines
     text_els, line_els = generate_typst_elements(input_text, preamble)
 
     gc, offset = to_glyphcollection(text_els, align, rotation, color, strokecolor, strokewidth)
@@ -202,7 +212,7 @@ end
 Adds all the Lines that are returned by the typst layouter to the plot.
 """
 function append_typst_linesegment_data!(outputs, align_offset, line_elements,
-    fontsize, rotation, color, offset,
+    rotation, color, offset,
 )
 
     block_idx = length(outputs.text_blocks)
