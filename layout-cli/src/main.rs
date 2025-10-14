@@ -1,17 +1,14 @@
 use serde_json;
 use std::env::args;
-use std::fs;
+// use std::fs;
 use std::io::{self, Read, Write, stdout};
 use typst::layout::PagedDocument;
 use typst_as_lib::{TypstEngine, typst_kit_options::TypstKitFontOptions};
-use typst_pdf;
+// use typst_pdf;
 
 mod serialise;
 use crate::serialise::SerializableFrame;
 
-// Set font path
-// TODO: set this from the julia side, maybe as args?
-// static FONT: &[u8] = include_bytes!("../fonts/FiraMath-Regular.otf");
 static _OUTPUT: &str = "output.pdf";
 
 fn main() {
@@ -48,9 +45,9 @@ fn main() {
     // dbg!(&frame_string);
     stdout().write_all(frame_string.as_bytes()).unwrap();
 
-    let options = Default::default();
-    let pdf = typst_pdf::pdf(&doc, &options).expect("Could not generate pdf.");
-    fs::write(_OUTPUT, pdf).expect("Could not write pdf.");
+    // let options = Default::default();
+    // let pdf = typst_pdf::pdf(&doc, &options).expect("Could not generate pdf.");
+    // fs::write(_OUTPUT, pdf).expect("Could not write pdf.");
 }
 
 // fn full_compile(file_string: Vec<u8>, font_string: Vec<u8>) -> Vec<u8> {}
