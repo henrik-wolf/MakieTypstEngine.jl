@@ -66,7 +66,6 @@ internally be passed to `Makie.to_font(your_font)`
 or a `FTFont` object directly.
 """
 function from_typst_font(::Val{T}, font_dict) where {T}
-    @show T
     return String(T)
 end
 
