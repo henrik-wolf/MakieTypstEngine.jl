@@ -1,9 +1,14 @@
 include("general_utils.jl")
 
-get_run_cmd() = `cargo run`
+# get_run_cmd(paths = []) = length(paths) > 0 ? `cargo run -- $paths` : `cargo run`
 # get_run_cmd() = cli_binary[]
-# get_run_cmd() = `target/release/layout-cli`
-
+function get_run_cmd(paths = [])
+    if length(paths) > 0
+        `target/release/layout-cli $paths`
+    else
+        `target/release/layout-cli`
+    end
+end
 ## Copied from https://discourse.julialang.org/t/capture-stdout-and-stderr-in-case-a-command-fails/101772/3
 function execute(cmd::Cmd; input = nothing, path = ".")
     out = Pipe()
@@ -17,24 +22,24 @@ function execute(cmd::Cmd; input = nothing, path = ".")
     close(out.in)
     close(err.in)
 
-    return_tuple = (
-        stdout = String(read(out)),
-        stderr = String(read(err)),
-        # exitcode = process.exitcode
-    )
-    return return_tuple
+    stderr = String(read(err))
+
+    if length(stderr) > 0
+        throw(error(stderr))
+    end
+    return String(read(out))
 end
 
 """
 Compile a string that looks like a full typst document into a json object of the layout
 """
-function compile_string(str)
-    runcmd = get_run_cmd()
+function compile_string(str, additional_font_paths = [])
+    runcmd = get_run_cmd(additional_font_paths)
     path = get_rust_dir()
     input_cmd = `echo $(str)` # definitely not safe
 
     output = execute(runcmd; input = input_cmd, path = path)
-    return JSON.parse(output.stdout)
+    return JSON.parse(output)
 end
 
 """
