@@ -152,7 +152,7 @@ f = let
 
     fig = Figure(fonts = (; regular = font))
     Label(fig[1, 2], typst_string, fontsize = 20, tellheight = false)
-    ax = Axis(fig[1, 1], xlabel = typst"time $[t]$", ylabel = typst"$f(t)$")
+    ax = Axis(fig[1, 1], xlabel = typst"time $[s]$", ylabel = typst"$f(t)$")
     lines!(ax, 0 .. 10, sin, label = typst"$f(t) = sin(t)$")
     lines!(ax, 0 .. 10, cos, label = typst"$f(t) = cos(t)$")
     lines!(ax, 0 .. 10, t -> sin(t + π) + sin(t + 2π)^2, label = typst"$ f(t) = sum_(i=1)^2 sin^i (t+pi i) $")
@@ -160,4 +160,4 @@ f = let
     fig
 end
 
-save("examplefig.png", f, px_per_unit = 3)
+save("./images/examplefig.png", f, px_per_unit = 3)
