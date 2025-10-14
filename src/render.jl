@@ -53,6 +53,8 @@ function append_text!(target, text, location = Point2f(0, 0))
         tg = TypstGlyph(
             font = c["font"],
             size = c["size"],
+            # TODO: there seems to be some spacing issues with just this approach.
+            # maybe it is not kerning aware?
             location = text["location"] + Point2f(cumulated_advance, 0.0),
             text = c["text"],
             glyph = glyph,
@@ -176,7 +178,11 @@ end
 
 
 # MARK: Makie source inspired functions
-
+"""
+takes the input string, and runs the rendering pipeline on it. Returns
+the `TypstLines`, a `GlyphCollection` and an offset vector by which the glyphs
+have been shifted.
+"""
 function typstelems_and_glyph_collection(input_text::TypstString, fontsize,
     font, align, rotation, justification, lineheight, word_wrap_width,
     color, strokecolor, strokewidth,
@@ -189,15 +195,12 @@ function typstelems_and_glyph_collection(input_text::TypstString, fontsize,
 
     gc, offset = to_glyphcollection(text_els, align, rotation, color, strokecolor, strokewidth)
     return line_els, gc, offset
-
-    # input_text = L"\frac{1}{1+e^{-\beta x}}"
-    # args = (fontsize, align, rotation, color, strokecolor, strokewidth, word_wrap_width)
-    # els = MathTeXEngine.generate_tex_elements(input_text)
-    # return Makie.texelems_and_glyph_collection(input_text, args...)
 end
 
 
-# adds the lines to the output. Not sure if we really need this...
+"""
+Adds all the Lines that are returned by the typst layouter to the plot.
+"""
 function append_typst_linesegment_data!(outputs, align_offset, line_elements,
     fontsize, rotation, color, offset,
 )
@@ -206,11 +209,8 @@ function append_typst_linesegment_data!(outputs, align_offset, line_elements,
     pos_idx = first(last(outputs.text_blocks))
 
     for el in line_elements
-        from = el.from
-        to = el.to
-
-        p0 = rotation * to_ndim(Point3f, from .- align_offset, 0) .+ offset
-        p1 = rotation * to_ndim(Point3f, to .- align_offset, 0) .+ offset
+        p0 = rotation * to_ndim(Point3f, el.from .- align_offset, 0) .+ offset
+        p1 = rotation * to_ndim(Point3f, el.to .- align_offset, 0) .+ offset
         push!(outputs.linesegments, p0, p1)
         thickness = el.thickness
         push!(outputs.linewidths, thickness, thickness)
