@@ -139,3 +139,25 @@ let
     axislegend(ax)
     fig
 end
+
+f = let
+    using CairoMakie
+    using MakieTypstEngine
+    font = MakieTypstEngine.MTEFont("TeXGyrePagella")
+
+    typst_string = typst"""
+    this is an integral:
+    $ integral_0^t sin(x)^2 dif x $
+    """
+
+    fig = Figure(fonts = (; regular = font))
+    Label(fig[1, 2], typst_string, fontsize = 20, tellheight = false)
+    ax = Axis(fig[1, 1], xlabel = typst"time $[t]$", ylabel = typst"$f(t)$")
+    lines!(ax, 0 .. 10, sin, label = typst"$f(t) = sin(t)$")
+    lines!(ax, 0 .. 10, cos, label = typst"$f(t) = cos(t)$")
+    lines!(ax, 0 .. 10, t -> sin(t + π) + sin(t + 2π)^2, label = typst"$ f(t) = sum_(i=1)^2 sin^i (t+pi i) $")
+    axislegend(ax)
+    fig
+end
+
+save("examplefig.png", f, px_per_unit = 3)

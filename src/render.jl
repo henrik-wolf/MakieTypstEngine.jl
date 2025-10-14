@@ -11,6 +11,10 @@ function to_preamble(font, fontsize, justification)
 
     #show math.equation: eq => {
         set text(font: "$(to_mathfont(font))")
+        eq
+    }
+
+    #show math.equation.where(block: true): eq => {
         set align($(justification))
         eq
     }
