@@ -3,14 +3,17 @@
 """
 Construct the preamble for the typst document from the Makie Theme
 """
-function to_preamble(fontsize, font, align, rotation, justification,
-    word_wrap_width, color, strokecolor, strokewidth,
-)
+function to_preamble(font, fontsize, justification)
     base_preamble = Typstry.preamble(context)
     makie_preamble = """
     #set text(font: "$(FreeTypeAbstraction.family_name(font))", $(fontsize)pt)
+    #set align($(justification))
 
-    #show math.equation: set text(font: "$(to_mathfont(font))")
+    #show math.equation: eq => {
+        set text(font: "$(to_mathfont(font))")
+        set align($(justification))
+        eq
+    }
     """
     base_preamble * makie_preamble
 end
@@ -179,8 +182,7 @@ function typstelems_and_glyph_collection(input_text::TypstString, fontsize,
     color, strokecolor, strokewidth,
 )
 
-    preamble = to_preamble(fontsize, font, align, rotation, justification,
-        word_wrap_width, color, strokecolor, strokewidth)
+    preamble = to_preamble(font, fontsize, justification)
 
     # get all elements
     text_els, line_els = generate_typst_elements(input_text, preamble)
