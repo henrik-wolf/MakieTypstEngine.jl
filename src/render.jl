@@ -6,7 +6,7 @@ Construct the preamble for the typst document from the Makie Theme
 function to_preamble(font, fontsize, justification)
     base_preamble = Typstry.preamble(context)
     makie_preamble = """
-    #set text(font: "$(FreeTypeAbstraction.family_name(font))", $(fontsize)pt)
+    #set text(font: "$(to_typstfont(font))", $(fontsize)pt)
     #set align($(justification))
 
     #show math.equation: eq => {

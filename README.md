@@ -46,6 +46,7 @@ before it reaches the `MakieTypstEngine` layer.
 Enabling the full round-trip from Makie to Typst and back to Makie proves slightly tricky, due to the
 different ways they handle fonts. As such, making your fonts with Makie might require some small user intervention in the shape of overwriting dispatches to
 ```julia
+MakieTypstEngine.to_typstfont(::Val{Symbol(your_fonts_family_name)}, font)
 MakieTypstEngine.to_mathfont(::Val{Symbol(your_fonts_family_name)}, font)
 ```
 (to get from makie to typst) as well as
@@ -53,3 +54,7 @@ MakieTypstEngine.to_mathfont(::Val{Symbol(your_fonts_family_name)}, font)
 MakieTypstEngine.from_typst_font(::Val{Symbol(your_fonts_family_name)}, font_dict)
 ```
 to map the fonts used in typst back to fonts that Makie understands.
+
+For more details, please consult the relevant docstrings. In general, both the `to_typstfont`, as well as `to_mathfont` return a string that, when interpolated into a typst document at `#set text(font: $typst_font)` and `#show math.equation: set text(font: \$math_font)` respectively, make the typst compiler resolve to the correct fonts for both regular and math text. 
+
+`from_typst_font` receives as dispatch the strings like they have been passed to the compiler, that is, the result of `to_typstfont` or `to_mathfont`, and a dictionary which contains information about the font that was used to render it. It then maps this information (mostly in `font_dict["variant"]["style"]` and `font_dict["variant"]["weight"]`) onto either strings that when passed into `Makie.to_font` resolve to the correct font, ([strings or strings that look like paths](https://docs.makie.org/stable/explanations/fonts)) or diretly onto the appropriate `FTFont` objects.

@@ -4,77 +4,19 @@ using MakieTypstEngine
 using MathTeXEngine
 using FreeTypeAbstraction
 
-MakieTypstEngine.to_mathfont(::Val{Symbol("fira sans")}, font) = "fira math"
+newcm = MakieTypstEngine.MTEFont("TeXGyreHeros", :math)
 
-function MakieTypstEngine.from_typst_font(::Val{Symbol("fira sans")}, font_dict)
-    var = font_dict["variant"]
-    # somehow, Makie.to_font did not give me the right font for this one...
-    if var["style"] == "italic" && var["weight"] == 400
-        return "/Users/henrikwolf/Library/Fonts/FiraSans-Italic.ttf"
-    end
-    # when using the full "italic" string, Makie.to_font resolves to a different font family
-    style = var["style"] == "italic" ? "it" : ""
-    # the numerical weights map to stuff like "thin", "regular", "bold" and so on...
-    weight = if var["weight"] == 400
-        "regular"
-    elseif var["weight"] == 700
-        "bold"
-    else
-        throw(error("unknown weight encountered"))
-    end
-    font_string = "fira sans $style $weight"
-    return font_string
-end
+FreeTypeAbstraction.family_name(newcm)
 
-typst"""
-= test hallo!
-$x+y^2$
-"""
-
-context
-
-MakieTypstEngine.to_mathfont
-
-TypstContext().context
-
-a = [1, 2, 3]
-
-a = typst"\(a)"
+MakieTypstEngine.additional_font_paths_mte()
 
 let
-    f = Figure(size = (1400, 700), fontsize = 40)
-    ax = Axis(
-        f[1, 1],
-        title = "Test",
-        xlabel = L"\frac{\int_3^{200} x^2 dx}{z^6}",
-        ylabel = typst"$x^2$",
-    )
-
-    f
-end
-
-
-example_str = raw"""// template.typ
-#set page(paper: "a6")
-#set text(font: "Fira Sans", 11pt, weight: "bold")
-#show math.equation: set text(font: "Fira Math")
-$sum x/y^2$
-test *test* test
-"""
-
-MakieTypstEngine.get_run_cmd(["test", "test2/4/test"])
-
-@time let
     f = Figure(size = (400, 800))
     a = [1, 2, 3]
     # Label(f[1, 1], typst"$sin(x^2) = \(a; mode=math)$")
-    Label(f[1, 1], typst"""$ sum x/y^2 $ test *test* _test_
+    Label(f[1, 1], typst"""$ sum x/y^2 $ test *test* _test_ _*test*_
 
-    test""", fontsize = 40, font = "Fira Sans")
-    ax = Axis(f[2, 1])
-    text!(ax, Point2f(0, 0), text = typst"$sin(x^2)$ 
-
-    test", font = "Fira Sans", align = (:left, :center), justification = :right)
+    test""", fontsize = 40, font = newcm)
     f
 end
 
