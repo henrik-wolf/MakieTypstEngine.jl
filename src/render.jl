@@ -111,7 +111,8 @@ function generate_typst_elements(input_text, preamble)
     $input_text
     """
 
-    additional_font_paths = assetpath()
+    additional_font_paths = [assetpath(), MathTeXEngine.FONTS]
+
 
     all_els = unroll_groups_and_locations(compile_string(full_document, additional_font_paths))
     return (
