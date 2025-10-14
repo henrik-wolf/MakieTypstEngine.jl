@@ -7,21 +7,14 @@ function to_preamble(fontsize, font, align, rotation, justification,
     word_wrap_width, color, strokecolor, strokewidth,
 )
     base_preamble = Typstry.preamble(context)
+    @show font.num_faces
     makie_preamble = """
-    #set text(font: "Fira Sans", $(fontsize)pt)
+    #set text(font: "$(font.fontname)", $(fontsize)pt)
     #show math.equation: set text(font: "Fira Math")
     """
     base_preamble * makie_preamble
 end
 
-
-"""
-Figure out the path to the fontfile represented by the FTFont object on `font`.
-This is necessary, as the rust cli needs a path to the font, as well as its name.
-"""
-function to_fontpath(font)
-    return joinpath(dirname(@__DIR__), "layout-cli", "fonts", "FiraMath-Regular.otf")
-end
 
 @kwdef struct TypstGlyph
     font::Dict{String,Any}
@@ -105,7 +98,7 @@ end
 create a document from input text, preamble and (currently) fontpath,
 render it and return tuple of text and line elements
 """
-function generate_typst_elements(input_text, preamble, fontpath)
+function generate_typst_elements(input_text, preamble)
     full_document = """
     $preamble
 
@@ -113,7 +106,9 @@ function generate_typst_elements(input_text, preamble, fontpath)
     $input_text
     """
 
-    all_els = full_document |> compile_string |> unroll_groups_and_locations
+    additional_font_paths = assetpath()
+
+    all_els = unroll_groups_and_locations(compile_string(full_document, additional_font_paths))
     return (
         filter(i -> (i isa TypstGlyph), all_els),
         filter(i -> (i isa TypstLine), all_els),
@@ -130,7 +125,7 @@ function to_glyphcollection(text_els, align, rotation, color, strokecolor, strok
         family = el.font["family"] * " " * el.font["variant"]["style"][1:2]
 
         if !haskey(cached_fonts, family)
-            cached_fonts[family] = findfont(family)
+            cached_fonts[family] = Makie.to_font(el.font["family"])
         end
 
         font = cached_fonts[family]
@@ -188,10 +183,8 @@ function typstelems_and_glyph_collection(input_text::TypstString, fontsize,
     preamble = to_preamble(fontsize, font, align, rotation, justification,
         word_wrap_width, color, strokecolor, strokewidth)
 
-    fontpath = to_fontpath(font)
-
     # get all elements
-    text_els, line_els = generate_typst_elements(input_text, preamble, fontpath)
+    text_els, line_els = generate_typst_elements(input_text, preamble)
 
     gc, offset = to_glyphcollection(text_els, align, rotation, color, strokecolor, strokewidth)
     return line_els, gc, offset
