@@ -7,10 +7,10 @@ function to_preamble(fontsize, font, align, rotation, justification,
     word_wrap_width, color, strokecolor, strokewidth,
 )
     base_preamble = Typstry.preamble(context)
-    @show font.num_faces
     makie_preamble = """
-    #set text(font: "$(font.fontname)", $(fontsize)pt)
-    #show math.equation: set text(font: "Fira Math")
+    #set text(font: "$(FreeTypeAbstraction.family_name(font))", $(fontsize)pt)
+
+    #show math.equation: set text(font: "$(to_mathfont(font))")
     """
     base_preamble * makie_preamble
 end
@@ -121,14 +121,13 @@ function to_glyphcollection(text_els, align, rotation, color, strokecolor, strok
     cached_fonts = Dict{String,FTFont}()
 
     text_info = map(text_els) do el
-        # TODO: figure out some way to let the user specify this mapping?
-        family = el.font["family"] * " " * el.font["variant"]["style"][1:2]
+        font_repr = repr(el.font)
 
-        if !haskey(cached_fonts, family)
-            cached_fonts[family] = Makie.to_font(el.font["family"])
+        if !haskey(cached_fonts, font_repr)
+            cached_fonts[font_repr] = maybe_to_FTFont(from_typst_font(el.font))
         end
 
-        font = cached_fonts[family]
+        font = cached_fonts[font_repr]
 
         glyphindex = el.glyph["id"]
 

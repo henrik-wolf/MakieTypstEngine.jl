@@ -21,6 +21,7 @@ end
 
 # this is the main package code
 include("rust_cli.jl")
+include("font_resolve.jl")
 
 include("render.jl")
 include("piracy.jl")
