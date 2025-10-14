@@ -64,7 +64,7 @@ test *test* test
 
 MakieTypstEngine.get_run_cmd(["test", "test2/4/test"])
 
-let
+@time let
     f = Figure(size = (400, 800))
     a = [1, 2, 3]
     # Label(f[1, 1], typst"$sin(x^2) = \(a; mode=math)$")
@@ -75,6 +75,20 @@ let
     text!(ax, Point2f(0, 0), text = typst"$sin(x^2)$ 
 
     test", font = "Fira Sans", align = (:left, :center), justification = :right)
+    f
+end
+
+@time let
+    f = Figure(size = (400, 800))
+    a = [1, 2, 3]
+    # Label(f[1, 1], typst"$sin(x^2) = \(a; mode=math)$")
+    Label(f[1, 1], """ test *test* _test_
+
+    test""", fontsize = 40, font = "Fira Sans")
+    ax = Axis(f[2, 1])
+    text!(ax, Point2f(0, 0), text = "sin(x^2) 
+
+     test", font = "Fira Sans", align = (:left, :center), justification = :right)
     f
 end
 
