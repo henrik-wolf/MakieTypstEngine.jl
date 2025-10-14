@@ -126,13 +126,16 @@ function to_glyphcollection(text_els, align, rotation, color, strokecolor, strok
     cached_fonts = Dict{String,FTFont}()
 
     text_info = map(text_els) do el
-        font_repr = repr(el.font)
+        font = maybe_to_FTFont(from_typst_font(el.font))
 
-        if !haskey(cached_fonts, font_repr)
-            cached_fonts[font_repr] = maybe_to_FTFont(from_typst_font(el.font))
-        end
+        # TODO: doing caching in this way does not seem more efficient?
+        # font_repr = repr(el.font)
 
-        font = cached_fonts[font_repr]
+        # if !haskey(cached_fonts, font_repr)
+        #     cached_fonts[font_repr] = maybe_to_FTFont(from_typst_font(el.font))
+        # end
+
+        # font = cached_fonts[font_repr]
 
         glyphindex = el.glyph["id"]
 
