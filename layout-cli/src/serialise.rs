@@ -17,8 +17,8 @@ impl Serialize for SerializableFrame {
         let SerializableFrame(frame) = self;
         let mut seq = serializer.serialize_seq(Some(frame.layer()))?;
         for (point, item) in frame.items() {
-            dbg!(point);
-            dbg!(item);
+            // dbg!(point);
+            // dbg!(item);
             let serialised_point = serialise_point(point);
             let serialised_type = serialise_type(item);
             let serialised_item = serialise_item(item);
@@ -74,7 +74,6 @@ fn serialise_type(item: &FrameItem) -> Option<serde_json::Value> {
 fn serialise_item(item: &FrameItem) -> Option<serde_json::Value> {
     match item {
         FrameItem::Text(x) => {
-            dbg!(&x.glyphs);
             let wrapped_glyphs: Vec<SerialisableGlyph> = x
                 .glyphs
                 .iter()
