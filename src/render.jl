@@ -100,8 +100,8 @@ function unroll_groups_and_locations(elements)
 end
 
 """
-create a document from input text, preamble and (currently) fontpath,
-render it and return tuple of text and line elements
+create a document from input text and preamble, render it and return tuple of
+text and line elements.
 """
 function generate_typst_elements(input_text, preamble)
     full_document = """
@@ -120,6 +120,9 @@ function generate_typst_elements(input_text, preamble)
     )
 end
 
+"""
+Convert a flat list of layouted glyphs from typst to something that makie understands.
+"""
 function to_glyphcollection(text_els, align, rotation, color, strokecolor, strokewidth)
     halign, valign = align
 
