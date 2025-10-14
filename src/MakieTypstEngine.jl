@@ -4,6 +4,7 @@ using Typstry
 using Makie
 using JSON
 using FreeTypeAbstraction
+using MathTeXEngine
 
 export @typst_str
 
