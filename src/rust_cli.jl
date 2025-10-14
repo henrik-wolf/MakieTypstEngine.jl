@@ -44,6 +44,6 @@ function compile_string(str, additional_font_paths = [])
     path = get_rust_dir()
     input_cmd = `echo $(str)` # TODO: definitely not safe
 
-    output = execute(runcmd; input = input_cmd, path = path)
+    output = execute(runcmd; inputcmd = input_cmd, path = path)
     return JSON.parse(output)
 end
