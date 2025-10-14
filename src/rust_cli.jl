@@ -1,20 +1,20 @@
 include("general_utils.jl")
 
 # get_run_cmd(paths = []) = length(paths) > 0 ? `cargo run -- $paths` : `cargo run`
-# function get_run_cmd(paths = [])
-#     if length(paths) > 0
-#         `$(cli_binary[]) $paths`
-#     else
-#         cli_binary[]
-#     end
-# end
 function get_run_cmd(paths = [])
     if length(paths) > 0
-        `target/release/layout-cli $paths`
+        `$(cli_binary[]) $paths`
     else
-        `target/release/layout-cli`
+        cli_binary[]
     end
 end
+# function get_run_cmd(paths = [])
+#     if length(paths) > 0
+#         `target/release/layout-cli $paths`
+#     else
+#         `target/release/layout-cli`
+#     end
+# end
 
 ## Copied from https://discourse.julialang.org/t/capture-stdout-and-stderr-in-case-a-command-fails/101772/3
 function execute(cmd::Cmd; inputcmd, path = ".")
