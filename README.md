@@ -39,6 +39,7 @@ axislegend(ax)
 fig
 ```
 will give you something like:
+
 <img src="./images/examplefig.png" width="600">
 
 ## Fonts
