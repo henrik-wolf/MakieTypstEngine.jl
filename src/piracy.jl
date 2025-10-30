@@ -52,7 +52,7 @@ function Makie.convert_text_string!(outputs::NamedTuple, input_text::TypstString
     return nothing
 end
 
-Makie.iswhitespace(l::TypstString) = Makie.iswhitespace(replace(l.text, '$' => ""))
+Makie.iswhitespace(l::TypstString) = Makie.iswhitespace(replace(l, '$' => ""))
 
 @testitem "iswhitespace" begin
     using Typstry
