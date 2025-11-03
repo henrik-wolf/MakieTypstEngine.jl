@@ -15,7 +15,7 @@ julia> using MakieTypstEngine
 
 Whenever the package loads, it will run a `cargo build -r` command which locally compiles a rust based cli tool which is used to layout your typst strings. As such, for this package to work, you need to have rust and cargo installed and available on your system. This process can take a few ten seconds on the first load.
 
-## Useage
+## Usage
 This package provides mostly glue code that enables you to put any (with some restrictions) `TypstString` wherever Makie would have previously only allowed
 normal `Strings`, `RichText` or `LaTeXString`:
 
